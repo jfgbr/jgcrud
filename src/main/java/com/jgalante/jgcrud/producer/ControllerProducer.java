@@ -47,6 +47,9 @@ public class ControllerProducer implements Serializable{
 //				return constructor.newInstance();
             	BaseController<T,BaseDAO<T>> genericController = (BaseController<T,BaseDAO<T>>) Util.getBeanByType(controllerClass, bm);
             	genericController.setEntityClass(entityClass);
+//            	((BaseView<T, BaseController<T,BaseDAO<T>>>) ip.getBean().getTypes().iterator().next()).setDataModel(new DelegateDataModel<T>(genericController));
+//            	((BaseView<T, BaseController<T,BaseDAO<T>>>) ip.getBean()).setDataModel(new DelegateDataModel<T>(genericController));
+//            	BaseView<T, com.jgalante.jgcrud.controller.GenericController>
 				return genericController;
 			} catch (Exception e) {
 				e.printStackTrace();

@@ -1,10 +1,13 @@
 package com.jgalante.jgcrud.util;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 
@@ -13,8 +16,64 @@ import javax.enterprise.inject.spi.Annotated;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.InjectionPoint;
+import javax.persistence.AttributeOverride;
+import javax.persistence.Basic;
+import javax.persistence.Column;
+import javax.persistence.Enumerated;
 
 public class Util {
+	
+	/**
+	 * Obtém a propriedade de uma classe que está anotado por: {@link Column}, {@link Basic}, 
+	 * {@link Enumerated} ou {@link AttributeOverride}.
+	 * 
+	 * @param type tipo da classe pesquisada
+	 * @param fieldName nome da propriedade
+	 * @return a instância {@link Field} da propriedade
+	 */
+	public static Field getField(Class<?> type, String fieldName) {
+		final List<Field> fields = getAllFields(new LinkedList<Field>(), type); 
+		
+		for (Field field : fields) {
+			if (!field.isAnnotationPresent(Column.class)
+					&& !field.isAnnotationPresent(Basic.class)
+					&& !field.isAnnotationPresent(Enumerated.class)
+					&& !field.isAnnotationPresent(AttributeOverride.class)) {
+				continue;
+			}
+
+			try {
+				field.setAccessible(true);
+				if (field.getName().equals(fieldName)) {
+					return field;
+				}
+
+			} catch (IllegalArgumentException e) {
+				continue;
+
+			}
+		}
+		return null;
+	}
+	
+	/**
+	 * Obtém todas as propriedades de uma classe.
+	 * 
+	 * @param fields lista com algumas propriedades
+	 * @param type tipo da classe pesquisada
+	 * @return lista com as novas propriedades encontradas
+	 */
+	public static List<Field> getAllFields(List<Field> fields, Class<?> type) {
+	    for (Field field: type.getDeclaredFields()) {
+	        fields.add(field);
+	    }
+
+	    if (type.getSuperclass() != null) {
+	        fields = getAllFields(fields, type.getSuperclass());
+	    }
+
+	    return fields;
+	}
 	
 	public static Object getBeanByName(String name, BeanManager bm) { 
         Bean<?> bean = bm.getBeans(name).iterator().next();

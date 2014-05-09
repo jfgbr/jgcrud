@@ -12,6 +12,7 @@ import com.jgalante.jgcrud.annotation.Controller;
 import com.jgalante.jgcrud.controller.BaseController;
 import com.jgalante.jgcrud.entity.BaseEntity;
 import com.jgalante.jgcrud.exception.ControllerException;
+import com.jgalante.jgcrud.model.DelegateDataModel;
 import com.jgalante.jgcrud.persistence.BaseDAO;
 import com.jgalante.jgcrud.util.MessageHandler;
 import com.jgalante.util.Reflections;
@@ -33,6 +34,8 @@ public class BaseView<T extends BaseEntity, C extends BaseController<T, ? extend
 	protected MessageHandler messages;
 	
 	public String save() {
+		save(entity);
+		getController().getDataModel().reset();
 		return null;
 	}
 	
@@ -41,6 +44,21 @@ public class BaseView<T extends BaseEntity, C extends BaseController<T, ? extend
 			getController().save(entity);
 		} catch (ControllerException e) {
 			messages.error(e.getMessage());
+		} catch (ConstraintViolationException e) {
+			handleContraintViolation(e.getConstraintViolations());
+		}
+		
+	}
+	
+	public String remove() {
+		remove(entity);
+		setEntities(findAll());
+		return null;
+	}
+	
+	public void remove(T entity) {
+		try {
+			getController().remove(entity);
 		} catch (ConstraintViolationException e) {
 			handleContraintViolation(e.getConstraintViolations());
 		}
@@ -82,6 +100,14 @@ public class BaseView<T extends BaseEntity, C extends BaseController<T, ? extend
 	@SuppressWarnings("unchecked")
 	public void setEntityClass(Class<? extends BaseEntity> entityClass) {
 		this.entityClass = (Class<T>) entityClass;
+	}	
+
+	public DelegateDataModel<T> getDataModel() {
+		return getController().getDataModel();
+	}
+	
+	public void setDataModel(DelegateDataModel<T> dataModel) {
+		this.getController().setDataModel(dataModel);		
 	}
 
 	public List<T> getEntities() {
